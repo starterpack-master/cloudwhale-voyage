@@ -231,6 +231,9 @@ class AudioEngine {
 
   // ---- 효과음 ----
   ui(): void { if (!this.ok) return; const t = this.now; this.tone(1320, t, 0.22, { gain: 0.06 }); this.tone(1980, t, 0.16, { gain: 0.025 }); }
+  // 대사 한 글자씩 나올 때의 작은 소리
+  blip(pitch = 1): void { if (!this.ok) return; this.tone(620 * pitch + Math.random() * 40, this.now, 0.035, { gain: 0.028, type: 'triangle', send: 0 }); }
+  footstep(): void { if (!this.ok) return; this.noiseBurst(this.now, 0.03, { type: 'lowpass', freq: 500, gain: 0.05 }); }
   open(): void { if (!this.ok) return; const t = this.now; this.tone(880, t, 0.25, { gain: 0.06 }); this.tone(1320, t + 0.07, 0.3, { gain: 0.06 }); }
   close(): void { if (!this.ok) return; const t = this.now; this.tone(1320, t, 0.2, { gain: 0.05 }); this.tone(880, t + 0.07, 0.3, { gain: 0.05 }); }
   plant(): void {
