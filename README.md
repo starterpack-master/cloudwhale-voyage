@@ -28,7 +28,9 @@ node scripts/shots.mjs   # 화면 캡처 (playwright 필요)
 ```
 
 ## 배포
-정적 파일만 있으면 됩니다. GitHub에 올리면 `.github/workflows/deploy.yml`이 GitHub Pages로 자동 배포합니다. 저장소 설정의 Pages에서 Source를 **GitHub Actions**로 바꿔 주세요.
+정적 파일만 있으면 됩니다. 빌드 결과(`dist/`)는 `gh-pages` 브랜치에 올라가고, GitHub Pages가 그 브랜치를 배포합니다.
+- 저장소 Settings → Pages → Source: **Deploy from a branch**, Branch: **gh-pages / (root)**
+- `.github/workflows/deploy.yml`이 있으면 main에 푸시할 때마다 자동으로 `gh-pages`를 갱신합니다.
 
 ## 구조
 ```
