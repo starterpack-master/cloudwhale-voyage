@@ -1,6 +1,6 @@
 import './care.css';
 import { audio, haptic } from '../audio/audio';
-import { icon, pixelCanvas } from '../world/pixelArt';
+import { icon, pixelCanvas } from '../art/pixel';
 
 export interface Fortune { color: string; name: string; effect: string; }
 export interface CareResult { pearls: number; bond: number; fortune: Fortune | null; }
@@ -202,7 +202,7 @@ export function openCare(opts: CareOptions): void {
         if (Math.hypot(ptr.x - bx, ptr.y - by) > Math.max(7, ry * 0.13)) continue;
         audio.scrub(speed, pan(ptr.x));
         squintUntil = time + 0.25;
-        b.hp -= dist * 0.012;
+        b.hp -= dist * 0.02;
         if (Math.random() < 0.5) parts.push({ x: bx, y: by, vx: (Math.random() - 0.5) * 30, vy: -10 - Math.random() * 20, life: 0.4, max: 0.4, col: '#E6E1F2', g: 60 });
         if (b.hp <= 0) {
           b.gone = true;

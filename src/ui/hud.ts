@@ -1,117 +1,102 @@
-import { iconImg } from '../world/pixelArt';
+import { iconImg, pixelCanvas } from '../art/pixel';
 
-export type Act = 'care' | 'build' | 'bag' | 'voyage' | 'friends' | 'settings' | 'wave';
-
-const h = (tag: string, cls = '', html = ''): HTMLElement => {
-  const e = document.createElement(tag);
-  if (cls) e.className = cls;
-  if (html) e.innerHTML = html;
-  return e;
+export type Item = 'seed' | 'berry' | 'wood' | 'bench' | 'note';
+const ITEM: Record<Item, { name: string; icon: string }> = {
+  seed: { name: '별딸기 씨앗', icon: 'seed' }, berry: { name: '별딸기', icon: 'berry' }, wood: { name: '하늘유목', icon: 'wood' },
+  bench: { name: '나무 벤치', icon: 'bench' }, note: { name: '노래조각', icon: 'note' },
 };
+const noteIcon = () => {
+  const img = new Image();
+  img.src = pixelCanvas(16, 16, (c) => {
+    c.fillStyle = '#ffdc72'; c.beginPath(); c.ellipse(5.5, 11.5, 3.2, 2.6, -0.4, 0, Math.PI * 2); c.fill();
+    c.fillRect(8, 2, 2, 10); c.fillRect(8, 2, 5, 2); c.fillRect(11, 3, 2, 3);
+    c.fillStyle = '#fffbdc'; c.fillRect(4, 10, 2, 1);
+  }).toDataURL();
+  img.className = 'px-icon';
+  return img;
+};
+const icn = (name: string) => (name === 'note' ? noteIcon() : iconImg(name));
+const h = (tag: string, cls: string, html = '') => Object.assign(document.createElement(tag), { className: cls, innerHTML: html });
 
-// 화면 위 UI (가로: 오른쪽 아래 버튼 묶음 / 세로: 아래 탭 바)
 export class Hud {
-  readonly labels: HTMLElement;
-  private hud: HTMLElement;
-  private sheet: HTMLElement;
-  private modal: HTMLElement;
+  private root: HTMLElement;
+  private q: HTMLElement;
+  private chip: HTMLElement;
+  private bar: HTMLElement;
+  private careBtn: HTMLElement;
   private toasts: HTMLElement;
-  private q = <T extends HTMLElement>(s: string, r: ParentNode = document) => r.querySelector(s) as T;
+  private banner: HTMLElement;
+  private modalEl: HTMLElement;
 
-  constructor(private root: HTMLElement, onAct: (a: Act) => void) {
-    this.labels = h('div', 'labels');
-    this.hud = h('div', 'hud', `
-      <div class="hud-top">
-        <div class="card place"><span data-i="whale"></span><div class="col"><b class="region">새벽 여울</b><span class="clock"></span></div></div>
-        <div class="card nuri"><div class="col"><b>누리 <small>도담</small></b><div class="bond"><i></i></div><span class="bond-t"></span></div></div>
-        <div class="grow"></div>
-        <div class="pill"><span data-i="shell"></span><span class="shells"></span></div>
-        <div class="pill"><span data-i="pearl"></span><span class="pearls"></span></div>
-        <button class="round" data-act="settings" aria-label="설정"><span data-i="settings"></span></button>
-      </div>
-      <div class="voyage-bar hidden"><span class="vtext"></span><div class="vprog"><i></i></div></div>
-      <div class="hud-actions">
-        <button class="act main" data-act="care"><span data-i="care"></span><span>돌보기</span></button>
-        <button class="act" data-act="build"><span data-i="build"></span><span>꾸미기</span></button>
-        <button class="act" data-act="bag"><span data-i="bag"></span><span>가방</span></button>
-        <button class="act" data-act="voyage"><span data-i="voyage"></span><span>항해</span></button>
-        <button class="act" data-act="friends"><span data-i="friends"></span><span>이웃</span></button>
-      </div>
-      <button class="act wave" data-act="wave"><span data-i="wave"></span><span>꼬리 인사</span></button>
-      <div class="toasts"></div>`);
-    this.sheet = h('div', 'sheet', `<div class="sheet-head"><b class="sheet-title"></b>
-      <button class="round sheet-x" aria-label="닫기"><span data-i="close"></span></button></div><div class="sheet-body"></div>`);
-    this.modal = h('div', 'modal hidden', '<div class="modal-card"></div>');
-    root.append(this.labels, this.hud, this.sheet, this.modal);
-    root.querySelectorAll<HTMLElement>('[data-i]').forEach((s) => s.replaceWith(iconImg(s.dataset.i!)));
-    root.querySelectorAll<HTMLButtonElement>('[data-act]').forEach((b) => { b.onclick = () => onAct(b.dataset.act as Act); });
-    this.q<HTMLButtonElement>('.sheet-x', this.sheet).onclick = () => this.closeSheet();
-    this.toasts = this.q('.toasts', this.hud);
+  constructor(root: HTMLElement, on: { item: (i: Item) => void; care: () => void; menu: () => void; quest: () => void }) {
+    this.root = h('div', 'hud');
+    this.q = h('div', 'quest px', '<div class="q-label">지금 할 일</div><div class="q-title"></div><div class="q-hint"></div>');
+    this.q.onclick = on.quest;
+    const tr = h('div', 'topright');
+    this.chip = h('div', 'chip px');
+    const menu = h('button', 'btn2 px menu', '');
+    menu.appendChild(iconImg('settings'));
+    menu.onclick = on.menu;
+    tr.append(this.chip, menu);
+    this.bar = h('div', 'bar px');
+    (Object.keys(ITEM) as Item[]).forEach((id) => {
+      const b = h('button', 'slot px');
+      b.dataset.id = id;
+      b.title = ITEM[id].name;
+      b.append(icn(ITEM[id].icon), h('b', 'cnt'));
+      b.onclick = () => on.item(id);
+      this.bar.appendChild(b);
+    });
+    this.careBtn = h('button', 'care-btn btn px', '<span>누리 돌보기</span>');
+    this.careBtn.prepend(iconImg('care'));
+    this.careBtn.onclick = on.care;
+    this.toasts = h('div', 'toasts');
+    this.banner = h('div', 'banner px hidden');
+    this.modalEl = h('div', 'modal hidden');
+    this.root.append(this.q, tr, this.bar, this.careBtn, this.toasts, this.banner, this.modalEl);
+    root.appendChild(this.root);
   }
 
-  setClock(t: string): void { this.q('.clock', this.hud).textContent = t; }
-  setRegion(t: string): void { this.q('.region', this.hud).textContent = t; }
-  setCurrency(shells: number, pearls: number): void {
-    this.q('.shells', this.hud).textContent = shells.toLocaleString('ko-KR');
-    this.q('.pearls', this.hud).textContent = String(pearls);
+  quest(title: string, hint: string, flash = false): void {
+    (this.q.querySelector('.q-title') as HTMLElement).textContent = title;
+    (this.q.querySelector('.q-hint') as HTMLElement).textContent = hint;
+    if (flash) { this.q.classList.remove('flash'); void this.q.offsetWidth; this.q.classList.add('flash'); }
   }
-  setBond(level: number, xp: number): void {
-    this.q('.bond i', this.hud).style.width = `${Math.round(xp * 100)}%`;
-    this.q('.bond-t', this.hud).textContent = `교감 ${level}단계`;
+  place(name: string): void { this.chip.textContent = name; }
+  items(inv: Record<Item, number>, highlight?: Item): void {
+    this.bar.querySelectorAll<HTMLElement>('.slot').forEach((b) => {
+      const id = b.dataset.id as Item;
+      (b.querySelector('.cnt') as HTMLElement).textContent = inv[id] ? String(inv[id]) : '';
+      b.classList.toggle('empty', !inv[id]);
+      b.classList.toggle('on', id === highlight && inv[id] > 0);
+    });
   }
-  setVisible(on: boolean): void { this.hud.classList.toggle('off', !on); this.labels.classList.toggle('off', !on); }
+  showCare(on: boolean): void { this.careBtn.classList.toggle('hidden', !on); }
+  visible(on: boolean): void { this.root.classList.toggle('off', !on); }
 
-  toast(text: string, icon?: string): void {
-    const t = h('div', 'toast');
-    if (icon) t.appendChild(iconImg(icon));
+  toast(text: string, icon?: Item | string): void {
+    const t = h('div', 'toast px');
+    if (icon) t.appendChild(icn(icon in ITEM ? ITEM[icon as Item].icon : icon));
     t.appendChild(document.createTextNode(text));
     this.toasts.appendChild(t);
     while (this.toasts.children.length > 3) this.toasts.firstElementChild?.remove();
-    setTimeout(() => t.classList.add('bye'), 2400);
-    setTimeout(() => t.remove(), 2900);
+    setTimeout(() => t.classList.add('bye'), 2600);
+    setTimeout(() => t.remove(), 3100);
   }
 
-  setVoyage(text: string | null, p = 0): void {
-    const bar = this.q('.voyage-bar', this.hud);
-    bar.classList.toggle('hidden', !text);
+  setBanner(text: string | null, onCancel?: () => void): void {
+    this.banner.classList.toggle('hidden', !text);
     if (!text) return;
-    this.q('.vtext', bar).textContent = text;
-    this.q('.vprog i', bar).style.width = `${Math.round(p * 100)}%`;
+    this.banner.innerHTML = `<span>${text}</span>`;
+    if (onCancel) {
+      const b = h('button', 'btn2 px small', '취소');
+      b.onclick = onCancel;
+      this.banner.appendChild(b);
+    }
   }
 
-  openSheet(title: string, body: HTMLElement): void {
-    this.q('.sheet-title', this.sheet).textContent = title;
-    const b = this.q('.sheet-body', this.sheet);
-    b.replaceChildren(body);
-    this.sheet.classList.add('open');
-  }
-  closeSheet(): void { this.sheet.classList.remove('open'); }
-  get sheetOpen(): boolean { return this.sheet.classList.contains('open'); }
-
-  showModal(body: HTMLElement): void {
-    this.q('.modal-card', this.modal).replaceChildren(body);
-    this.modal.classList.remove('hidden');
-    requestAnimationFrame(() => this.modal.classList.add('show'));
-  }
-  hideModal(): void {
-    this.modal.classList.remove('show');
-    setTimeout(() => this.modal.classList.add('hidden'), 250);
-  }
-
-  // 시작 화면 (첫 터치에서 소리 켜기)
-  showTitle(onStart: () => void): void {
-    const t = h('div', 'title-screen', `
-      <div class="logo"><span class="ko">구름고래 항해기</span><span class="en">Cloudwhale Voyage</span></div>
-      <p class="tag">오랜만에 올려다본 하늘에서,<br/>아기 고래가 당신의 노래에 대답했다.</p>
-      <button class="start">하늘로 가기</button>
-      <p class="fine">UX 프로토타입 · 소리를 켜고 들어 보세요 · 가로·세로 모두 지원</p>`);
-    this.root.appendChild(t);
-    this.setVisible(false);
-    this.q<HTMLButtonElement>('.start', t).onclick = () => {
-      t.classList.add('bye');
-      setTimeout(() => t.remove(), 700);
-      this.setVisible(true);
-      onStart();
-    };
+  modal(body: HTMLElement | null): void {
+    this.modalEl.classList.toggle('hidden', !body);
+    this.modalEl.replaceChildren(...(body ? [body] : []));
   }
 }
