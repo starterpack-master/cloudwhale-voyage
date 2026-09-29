@@ -57,7 +57,8 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
 .dlg-face img { width: 64px; height: 64px; image-rendering: pixelated; }
 .dlg-body { flex: 1; min-width: 0; position: relative; padding-top: 2px; }
 .dlg-name { display: inline-block; font-size: 13px; color: #8069bd; margin-bottom: 4px; }
-.dlg-text { font-size: 16px; line-height: 1.6; min-height: 3.2em; white-space: pre-wrap; word-break: keep-all; }
+.dlg-text { font-size: 16px; line-height: 1.6; min-height: 3.2em; white-space: pre-wrap; word-break: keep-all; padding-right: 16px; }
+.talking .bar, .talking .care-btn { opacity: 0; pointer-events: none !important; transition: opacity 0.2s; }
 .dlg-next { position: absolute; right: 0; bottom: -4px; font-size: 12px; color: #8069bd; animation: bobble 0.8s ease-in-out infinite; }
 .dlg.narr .dlg-text { color: #6a55a8; font-size: 15px; }
 

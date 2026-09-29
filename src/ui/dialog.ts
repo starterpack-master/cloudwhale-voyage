@@ -32,7 +32,7 @@ export class Dialog {
   private done: (() => void) | null = null;
   open = false;
 
-  constructor(root: HTMLElement) {
+  constructor(private root: HTMLElement) {
     this.el = document.createElement('div');
     this.el.className = 'dlg hidden';
     this.el.innerHTML = '<div class="dlg-face"><img alt=""></div><div class="dlg-body"><div class="dlg-name"></div><div class="dlg-text"></div><div class="dlg-next">▼</div></div>';
@@ -49,6 +49,7 @@ export class Dialog {
     this.done = onDone ?? null;
     this.open = true;
     this.el.classList.remove('hidden');
+    this.root.classList.add('talking'); // 대화 중에는 아래쪽 HUD를 숨긴다
     this.show();
   }
 
@@ -84,6 +85,7 @@ export class Dialog {
     if (this.i < this.lines.length) { audio.ui(); this.show(); return; }
     this.open = false;
     this.el.classList.add('hidden');
+    this.root.classList.remove('talking');
     const d = this.done;
     this.done = null;
     d?.();

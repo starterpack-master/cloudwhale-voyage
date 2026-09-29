@@ -21,7 +21,9 @@ const page = await browser.newPage({ viewport: vp, deviceScaleFactor: 2, hasTouc
 const errors = [];
 page.on('pageerror', (e) => errors.push(e.message));
 const wait = (ms) => page.waitForTimeout(ms);
-const shot = async (n) => { await page.screenshot({ path: `${OUT}/v2-${mode}-${n}.png` }); console.log('saved', n); };
+const BASE = process.env.BASE_URL ?? 'http://127.0.0.1:4175/'; // 실서버 점검: BASE_URL=https://.../ node scripts/play.mjs
+const tag = process.env.BASE_URL ? 'live-' : '';
+const shot = async (n) => { await page.screenshot({ path: `${OUT}/v2-${tag}${mode}-${n}.png` }); console.log('saved', n); };
 const W = (fn, arg) => page.evaluate(fn, arg);
 const scene = `window.__game.scene.getScene('world')`;
 const st = () => W(() => JSON.parse(localStorage.getItem('cloudwhale-v2') || '{}'));
@@ -43,7 +45,7 @@ async function until(fn, ms = 20000) {
 }
 const call = (expr) => W(new Function(`const s = ${scene}; ${expr}`));
 
-await page.goto('http://127.0.0.1:4175/');
+await page.goto(BASE);
 await wait(2500);
 await shot('01-title');
 await page.click('.start', { force: true });
