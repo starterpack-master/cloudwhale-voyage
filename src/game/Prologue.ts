@@ -55,7 +55,7 @@ export class PrologueScene extends Phaser.Scene {
       const sw = this.scale.width, sh = this.scale.height;
       const z = Math.max(1, Math.round(Math.max(sw / W, sh / H)));
       // 화면 아래를 길바닥에 맞추고, 남는 위쪽은 하늘색 배경이 채움
-      this.cameras.main.setZoom(z).setBackgroundColor('#b9a6e8').centerOn(W / 2, Math.min(H / 2, H - sh / z / 2));
+      this.cameras.main.setZoom(z).setBackgroundColor('#b9a6e8').centerOn(W / 2, H - sh / z / 2);
     };
     fit();
     this.scale.on('resize', fit);
